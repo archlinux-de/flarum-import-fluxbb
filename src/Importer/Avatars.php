@@ -64,7 +64,11 @@ class Avatars
         $avatarFile = $avatarFile[0];
 
         $newFileName = Str::random() . '.png';
-        $newPath = $this->container[Paths::class]->public . '/assets/avatars/' . $newFileName;
+        $newDir = $this->container[Paths::class]->public . '/assets/avatars';
+		if (!is_dir($newDir)) {
+			mkdir($newDir);
+		}
+        $newPath = $newDir . '/' . $newFileName;
         if (file_exists($newPath)) {
             throw new \RuntimeException('Avatar already exists: ' . $newFileName);
         }
