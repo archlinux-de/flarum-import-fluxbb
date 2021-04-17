@@ -50,8 +50,16 @@ class Topics
         $progressBar = new ProgressBar($output, count($topics));
 
         $this->database->statement('SET FOREIGN_KEY_CHECKS=0');
+        $solvedTagId = $this->createSolvedTag();
+
         foreach ($topics as $topic) {
             $numberOfPosts = $topic->num_replies + 1;
+            $tagIds = [$this->getParentTagId($topic->forum_id), $topic->forum_id];
+
+            if ($this->replaceSolvedHintByTag($topic->subject)) {
+                $tagIds[] = $solvedTagId;
+            }
+
             $this->database
                 ->table('discussions')
                 ->insert(
@@ -77,22 +85,18 @@ class Topics
                         'is_sticky' => $topic->sticky
                     ]
                 );
-            $this->database
-                ->table('discussion_tag')
-                ->insert(
-                    [
-                        'discussion_id' => $topic->id,
-                        'tag_id' => $this->getParentTagId($topic->forum_id),
-                    ]
-                );
-            $this->database
-                ->table('discussion_tag')
-                ->insert(
-                    [
-                        'discussion_id' => $topic->id,
-                        'tag_id' => $topic->forum_id,
-                    ]
-                );
+
+            foreach ($tagIds as $tagId) {
+                $this->database
+                    ->table('discussion_tag')
+                    ->insert(
+                        [
+                            'discussion_id' => $topic->id,
+                            'tag_id' => $tagId,
+                        ]
+                    );
+            }
+
             $progressBar->advance();
         }
         $this->database->statement('SET FOREIGN_KEY_CHECKS=1');
@@ -151,5 +155,39 @@ class Topics
             ->first();
 
         return $user->cat_id;
+    }
+
+    private function createSolvedTag(): int
+    {
+        return $this->database
+            ->table('tags')
+            ->insertGetId(
+                [
+                    'name' => 'gelöst',
+                    'slug' => 'geloest',
+                    'description' => 'Fragen die beantwortet und Themen die gelöst wurden',
+                    'color' => '#2e8b57',
+                    'is_hidden' => 1,
+                    'icon' => 'fas fa-check-square',
+                ]
+            );
+    }
+
+    private function replaceSolvedHintByTag(string &$title): bool
+    {
+        $solvedHint = '(gel(ö|oe)(s|ss|ß)t|(re)?solved|erledigt|done|geschlossen)';
+        $count = 0;
+        $title = preg_replace(
+            [
+                '/^\s*(\[|\()\s*' . $solvedHint . '\s*(\]|\))\s*/i',
+                '/\s*(\[|\()\s*' . $solvedHint . '\s*(\]|\))\s*$/i',
+                '/^\s*' . $solvedHint . ':\s*/i'
+            ],
+            '',
+            $title,
+            -1,
+            $count
+        );
+        return $count > 0;
     }
 }
