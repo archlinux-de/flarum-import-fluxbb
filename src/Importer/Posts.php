@@ -53,6 +53,7 @@ class Posts
                     'topic_id'
                 ]
             )
+            ->orderBy('topic_id')
             ->orderBy('id')
             ->get()
             ->all();
@@ -60,8 +61,12 @@ class Posts
         $progressBar = new ProgressBar($output, count($posts));
 
         $this->database->statement('SET FOREIGN_KEY_CHECKS=0');
+        $lastTopicId = 0;
         $currentPostNumber = 0;
         foreach ($posts as $post) {
+            if ($lastTopicId !== $post->topic_id) {
+                $currentPostNumber = 0;
+            }
             $currentPostNumber++;
             $this->database
                 ->table('posts')
@@ -83,6 +88,7 @@ class Posts
                         'is_approved' => 1
                     ]
                 );
+            $lastTopicId = $post->topic_id;
             $progressBar->advance();
         }
         $this->database->statement('SET FOREIGN_KEY_CHECKS=1');
