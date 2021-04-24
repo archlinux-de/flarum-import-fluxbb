@@ -76,7 +76,7 @@ class Posts
                         'discussion_id' => $post->topic_id,
                         'number' => $currentPostNumber,
                         'created_at' => (new \DateTime())->setTimestamp($post->posted),
-                        'user_id' => $post->poster_id,
+                        'user_id' => $post->poster_id > 1 ? $post->poster_id : null,
                         'type' => 'comment',
                         'content' => $this->convertPostContent($post),
                         'edited_at' => $post->edited ? (new \DateTime())->setTimestamp($post->edited) : null,

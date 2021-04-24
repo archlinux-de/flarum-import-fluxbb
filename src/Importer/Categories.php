@@ -110,17 +110,18 @@ class Categories
             ->topic_id;
     }
 
-    private function getLastPostUserId(int $categoryId): int
+    private function getLastPostUserId(int $categoryId): ?int
     {
         $lastPostId = $this->getLastPostId($categoryId);
 
-        return $this->database
+        $topic = $this->database
             ->table($this->fluxBBDatabase . '.posts')
             ->select(['poster_id'])
             ->where('id', '=', $lastPostId)
             ->where('poster_id', '!=', 1)
             ->get()
-            ->first()
-            ->poster_id;
+            ->first();
+
+        return $topic->poster_id ?? null;
     }
 }
