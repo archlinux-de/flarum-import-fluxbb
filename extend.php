@@ -1,5 +1,7 @@
 <?php
 
+namespace ArchLinux\ImportFluxBB;
+
 use ArchLinux\ImportFluxBB\Console\ImportFromFluxBB;
 use Flarum\Extend;
 
