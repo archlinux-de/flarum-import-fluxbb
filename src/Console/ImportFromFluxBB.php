@@ -15,6 +15,7 @@ use ArchLinux\ImportFluxBB\Importer\Reports;
 use ArchLinux\ImportFluxBB\Importer\Topics;
 use ArchLinux\ImportFluxBB\Importer\TopicSubscriptions;
 use ArchLinux\ImportFluxBB\Importer\Users;
+use ArchLinux\ImportFluxBB\Importer\Validation;
 use Flarum\Console\AbstractCommand;
 use Symfony\Component\Console\Input\InputArgument;
 
@@ -33,6 +34,7 @@ class ImportFromFluxBB extends AbstractCommand
     private Reports $reports;
     private PostMentionsUser $postMentionsUser;
     private InitialCleanup $initialCleanup;
+    private Validation $validation;
 
     public function __construct(
         Users $users,
@@ -47,7 +49,8 @@ class ImportFromFluxBB extends AbstractCommand
         Bans $bans,
         Reports $reports,
         PostMentionsUser $postMentionsUser,
-        InitialCleanup $initialCleanup
+        InitialCleanup $initialCleanup,
+        Validation $validation
     ) {
         $this->users = $users;
         $this->categories = $categories;
@@ -62,6 +65,7 @@ class ImportFromFluxBB extends AbstractCommand
         $this->reports = $reports;
         $this->postMentionsUser = $postMentionsUser;
         $this->initialCleanup = $initialCleanup;
+        $this->validation = $validation;
         parent::__construct();
     }
 
@@ -99,5 +103,7 @@ class ImportFromFluxBB extends AbstractCommand
         $this->bans->execute($this->output, $this->input->getArgument('fluxbb-database'));
         $this->reports->execute($this->output, $this->input->getArgument('fluxbb-database'));
         $this->postMentionsUser->execute($this->output);
+
+        $this->validation->execute($this->output);
     }
 }
