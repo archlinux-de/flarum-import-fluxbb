@@ -58,7 +58,7 @@ class Forums
                         'slug' => Str::slug(preg_replace('/\.+/', '-', $forum->forum_name), '-', 'de'),
                         'description' => $forum->forum_desc,
                         'position' => $forum->disp_position,
-                        'parent_id' => $forum->cat_id,
+                        'parent_id' => $forum->cat_id+CAT_INCREMENT,
                         'discussion_count' => $forum->num_topics,
                         'last_posted_at' => (new \DateTime())->setTimestamp($forum->last_post),
                         'last_posted_discussion_id' => $this->getLastTopicId($forum->last_post_id),
@@ -74,7 +74,7 @@ class Forums
         $output->writeln('');
     }
 
-    private function getLastTopicId(int $lastPostId): ?int
+    private function getLastTopicId(?int $lastPostId): ?int
     {
         $topic = $this->database
             ->table($this->fluxBBDatabase . '.posts')
@@ -86,7 +86,7 @@ class Forums
         return $topic->topic_id ?? null;
     }
 
-    private function getLastPostUserId(int $lastPostId): ?int
+    private function getLastPostUserId(?int $lastPostId): ?int
     {
         $topic = $this->database
             ->table($this->fluxBBDatabase . '.posts')

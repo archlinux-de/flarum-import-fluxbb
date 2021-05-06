@@ -17,7 +17,7 @@ class Topics
         $this->database = $database;
     }
 
-    public function execute(OutputInterface $output, string $fluxBBDatabase)
+    public function execute(OutputInterface $output, string $fluxBBDatabase, string $solvedHint)
     {
         $this->fluxBBDatabase = $fluxBBDatabase;
         $output->writeln('Importing topics...');
@@ -56,7 +56,7 @@ class Topics
             $numberOfPosts = $topic->num_replies + 1;
             $tagIds = [$this->getParentTagId($topic->forum_id), $topic->forum_id];
 
-            if ($this->replaceSolvedHintByTag($topic->subject)) {
+            if ($this->replaceSolvedHintByTag($topic->subject, $solvedHint)) {
                 $tagIds[] = $solvedTagId;
             }
 
@@ -147,14 +147,14 @@ class Topics
 
     private function getParentTagId(int $tagId): int
     {
-        $user = $this->database
+        $forums = $this->database
             ->table($this->fluxBBDatabase . '.forums')
             ->select(['cat_id'])
             ->where('id', '=', $tagId)
             ->get()
             ->first();
 
-        return $user->cat_id;
+        return $forums->cat_id+CAT_INCREMENT;
     }
 
     private function createSolvedTag(): int
@@ -173,9 +173,8 @@ class Topics
             );
     }
 
-    private function replaceSolvedHintByTag(string &$title): bool
+    private function replaceSolvedHintByTag(string &$title, string $solvedHint): bool
     {
-        $solvedHint = '(gel(ö|oe)(s|ss|ß)t|(re)?solved|erledigt|done|geschlossen)';
         $count = 0;
         $title = preg_replace(
             [

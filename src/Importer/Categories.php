@@ -43,7 +43,7 @@ class Categories
                 ->table('tags')
                 ->insert(
                     [
-                        'id' => $category->id,
+                        'id' => $category->id+CAT_INCREMENT,
                         'name' => $category->cat_name,
                         'slug' => Str::slug(preg_replace('/\.+/', '-', $category->cat_name), '-', 'de'),
                         'position' => $category->disp_position,
@@ -73,7 +73,7 @@ class Categories
             ->total_topics;
     }
 
-    private function getLastPostId(int $categoryId): int
+    private function getLastPostId(int $categoryId): ?int
     {
         return $this->database
             ->table($this->fluxBBDatabase . '.forums')
@@ -85,7 +85,7 @@ class Categories
             ->last_post_id;
     }
 
-    private function getLastPostedAt(int $categoryId): int
+    private function getLastPostedAt(int $categoryId): ?int
     {
         return $this->database
             ->table($this->fluxBBDatabase . '.forums')
@@ -97,7 +97,7 @@ class Categories
             ->last_post;
     }
 
-    private function getLastTopicId(int $categoryId): int
+    private function getLastTopicId(int $categoryId): ?int
     {
         $lastPostId = $this->getLastPostId($categoryId);
 
