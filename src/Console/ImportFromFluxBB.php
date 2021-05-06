@@ -15,9 +15,9 @@ use ArchLinux\ImportFluxBB\Importer\Reports;
 use ArchLinux\ImportFluxBB\Importer\Topics;
 use ArchLinux\ImportFluxBB\Importer\TopicSubscriptions;
 use ArchLinux\ImportFluxBB\Importer\Users;
-use ArchLinux\ImportFluxBB\Importer\Validation;
 use Flarum\Console\AbstractCommand;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 class ImportFromFluxBB extends AbstractCommand
 {
@@ -34,7 +34,6 @@ class ImportFromFluxBB extends AbstractCommand
     private Reports $reports;
     private PostMentionsUser $postMentionsUser;
     private InitialCleanup $initialCleanup;
-    private Validation $validation;
 
     public function __construct(
         Users $users,
@@ -49,8 +48,7 @@ class ImportFromFluxBB extends AbstractCommand
         Bans $bans,
         Reports $reports,
         PostMentionsUser $postMentionsUser,
-        InitialCleanup $initialCleanup,
-        Validation $validation
+        InitialCleanup $initialCleanup
     ) {
         $this->users = $users;
         $this->categories = $categories;
@@ -65,7 +63,6 @@ class ImportFromFluxBB extends AbstractCommand
         $this->reports = $reports;
         $this->postMentionsUser = $postMentionsUser;
         $this->initialCleanup = $initialCleanup;
-        $this->validation = $validation;
         parent::__construct();
     }
 
@@ -77,34 +74,85 @@ class ImportFromFluxBB extends AbstractCommand
         // also https://github.com/pierres/ll/blob/fluxbb/FluxImport.php
         $this
             ->setName('app:import-from-fluxbb')
-            ->setDescription('Import from FluxBB')
+            ->setDescription('Import from FluxBB database')
             ->addArgument('fluxbb-database', InputArgument::OPTIONAL, '', 'fluxbb')
-            ->addArgument('avatars-dir', InputArgument::OPTIONAL, '', '/fluxbb-avatars');
+            ->addArgument('avatars-dir', InputArgument::OPTIONAL, '', '/fluxbb-avatars')
+            ->addOption('restart-from', null, InputOption::VALUE_OPTIONAL, 'Restart import from step (user|avatar|topics|posts|subscriptions|groups|bans|reports|mentions|validation)', '')
+            ->addOption('resolved', null, InputOption::VALUE_REQUIRED, 'Pattern for resolved tag)', '(gel(ö|oe)(s|ss|ß)t|(re)?solved|erledigt|done|geschlossen)');
     }
 
     protected function fire()
     {
         ini_set('memory_limit', '16G');
         define('CAT_INCREMENT', 500);
+        $stepArray = [
+            'user' => 1,
+            'avatar' => 2,
+            'topics' => 4,
+            'posts' => 5,
+            'subscriptions' => 6,
+            'groups' => 7,
+            'bans' => 8,
+            'reports' => 9,
+            'mentions' => 10,
+            'validation' => 11
+        ];
 
-        $this->initialCleanup->execute($this->output);
-        $this->users->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->avatars->execute(
-            $this->output,
-            $this->input->getArgument('fluxbb-database'),
-            $this->input->getArgument('avatars-dir')
-        );
-        $this->categories->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->forums->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->topics->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->posts->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->topicSubscriptions->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->forumSubscriptions->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->groups->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->bans->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->reports->execute($this->output, $this->input->getArgument('fluxbb-database'));
-        $this->postMentionsUser->execute($this->output);
+        $step = $this->input->getOption('restart-from');
+        if (empty($step)) {
+            $step = 0;
+        } else {
+            if (isset($stepArray[$step])) {
+                $step = $stepArray[$step];
+            } else {
+                $this->output->write("<error>${step} is not a step in list !</error>");
+                return 1;
+            }
 
-        $this->validation->execute($this->output);
+        }
+
+        $this->initialCleanup->execute($this->output, $step);
+
+        if ($step<=1) {
+            $this->users->execute($this->output, $this->input->getArgument('fluxbb-database'));
+        }
+        if ($step<=2) {
+            $this->avatars->execute(
+                $this->output,
+                $this->input->getArgument('fluxbb-database'),
+                $this->input->getArgument('avatars-dir')
+            );
+        }
+        if ($step<=4) {
+            $this->categories->execute($this->output, $this->input->getArgument('fluxbb-database'));
+            $this->forums->execute($this->output, $this->input->getArgument('fluxbb-database'));
+            $this->topics->execute(
+                $this->output,
+                $this->input->getArgument('fluxbb-database'),
+                $this->input->getOption('resolved')
+            );
+        }
+        if ($step<=5) {
+            $this->posts->execute($this->output, $this->input->getArgument('fluxbb-database'));
+        }
+        if ($step<=6) {
+            $this->topicSubscriptions->execute($this->output, $this->input->getArgument('fluxbb-database'));
+            $this->forumSubscriptions->execute($this->output, $this->input->getArgument('fluxbb-database'));
+        }
+        if ($step<=7) {
+            $this->groups->execute($this->output, $this->input->getArgument('fluxbb-database'));
+        }
+        if ($step<=8) {
+            $this->bans->execute($this->output, $this->input->getArgument('fluxbb-database'));
+        }
+        if ($step<=9) {
+            $this->reports->execute($this->output, $this->input->getArgument('fluxbb-database'));
+        }
+        if ($step<=10) {
+            $this->postMentionsUser->execute($this->output);
+        }
+        if ($step<=11) {
+            $this->validation->execute($this->output);
+        }
     }
 }
