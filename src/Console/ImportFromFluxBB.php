@@ -17,6 +17,7 @@ use ArchLinux\ImportFluxBB\Importer\TopicSubscriptions;
 use ArchLinux\ImportFluxBB\Importer\Users;
 use ArchLinux\ImportFluxBB\Importer\Validation;
 use Flarum\Console\AbstractCommand;
+use Flarum\Extension\ExtensionManager;
 use Symfony\Component\Console\Input\InputArgument;
 
 class ImportFromFluxBB extends AbstractCommand
@@ -35,6 +36,7 @@ class ImportFromFluxBB extends AbstractCommand
     private PostMentionsUser $postMentionsUser;
     private InitialCleanup $initialCleanup;
     private Validation $validation;
+    private ExtensionManager $extensionManager;
 
     public function __construct(
         Users $users,
@@ -50,7 +52,8 @@ class ImportFromFluxBB extends AbstractCommand
         Reports $reports,
         PostMentionsUser $postMentionsUser,
         InitialCleanup $initialCleanup,
-        Validation $validation
+        Validation $validation,
+        ExtensionManager $extensionManager
     ) {
         $this->users = $users;
         $this->categories = $categories;
@@ -66,6 +69,7 @@ class ImportFromFluxBB extends AbstractCommand
         $this->postMentionsUser = $postMentionsUser;
         $this->initialCleanup = $initialCleanup;
         $this->validation = $validation;
+        $this->extensionManager = $extensionManager;
         parent::__construct();
     }
 
@@ -84,6 +88,25 @@ class ImportFromFluxBB extends AbstractCommand
 
     protected function fire()
     {
+        $requiredExtensions = [
+            'flarum-bbcode',
+            'flarum-emoji',
+            'flarum-mentions',
+            'flarum-nicknames',
+            'flarum-sticky',
+            'flarum-subscriptions',
+            'flarum-tags',
+            'flarum-suspend',
+            'flarum-lock',
+            'migratetoflarum-old-passwords'
+        ];
+        foreach ($requiredExtensions as $requiredExtension) {
+            if (!$this->extensionManager->isEnabled($requiredExtension)) {
+                $this->error($requiredExtension . ' extension needs to be enabled');
+                return;
+            }
+        }
+
         ini_set('memory_limit', '16G');
 
         $this->initialCleanup->execute($this->output);
