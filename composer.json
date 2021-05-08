@@ -4,18 +4,8 @@
     "license": "GPL-3.0-or-later",
     "type": "flarum-extension",
     "require": {
-        "flarum/core": ">=0.1.0-beta.16 <=0.1.0",
-        "ext-imagick": "*",
-        "flarum/bbcode": "^0.1.0@beta",
-        "flarum/emoji": "^0.1.0@beta",
-        "flarum/mentions": "^0.1.0@beta",
-        "flarum/nicknames": "^0.1.0-beta",
-        "flarum/sticky": "^0.1.0@beta",
-        "flarum/subscriptions": "^0.1.0@beta",
-        "flarum/tags": "^0.1.0@beta",
-        "flarum/suspend": "^0.1.0@beta",
-        "migratetoflarum/old-passwords": "^0.6.0",
-        "flarum/lock": "^0.1.0@beta"
+        "flarum/core": "^0.1 || ^1.0",
+        "ext-imagick": "*"
     },
     "autoload": {
         "psr-4": {
