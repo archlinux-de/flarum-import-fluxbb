@@ -29,7 +29,7 @@ class PostMentionsUser
         $progressBar = new ProgressBar($output, count($posts));
         foreach ($posts as $post) {
             preg_match_all(
-                '#<USERMENTION displayname=".+?" id="([0-9]+)" username=".+?">@.+?</USERMENTION>#',
+                '#<USERMENTION displayname=".+?" id="([0-9]+)">@.+?</USERMENTION>#',
                 $post->content,
                 $matches
             );
