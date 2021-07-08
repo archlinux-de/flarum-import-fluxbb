@@ -9,6 +9,8 @@ find its code useful to implement your own solution.
 composer require archlinux-de/flarum-import-fluxbb
 ```
 
+Don't forget to enable *FluxBB Importer*, *Old Passwords* and *Nicknames* extensions from admin interface.
+
 ### Usage
 
 ```sh
