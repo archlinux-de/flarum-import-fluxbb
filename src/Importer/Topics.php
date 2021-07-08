@@ -147,14 +147,14 @@ class Topics
 
     private function getParentTagId(int $tagId): int
     {
-        $user = $this->database
+        $forums = $this->database
             ->table($this->fluxBBDatabase . '.forums')
             ->select(['cat_id'])
             ->where('id', '=', $tagId)
             ->get()
             ->first();
 
-        return $user->cat_id;
+        return $forums->cat_id+CAT_INCREMENT;
     }
 
     private function createSolvedTag(): int

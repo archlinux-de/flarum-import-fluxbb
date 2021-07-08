@@ -108,6 +108,7 @@ class ImportFromFluxBB extends AbstractCommand
         }
 
         ini_set('memory_limit', '16G');
+        define('CAT_INCREMENT', 500);
 
         $this->initialCleanup->execute($this->output);
         $this->users->execute($this->output, $this->input->getArgument('fluxbb-database'));
